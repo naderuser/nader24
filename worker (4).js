@@ -633,6 +633,22 @@ function answerSheetWord(sub) {
 
 const SHARED_CSS = `
   :root{
+    --bg-primary:#f8fafc;
+    --bg-secondary:#ffffff;
+    --bg-card:#ffffff;
+    --primary:#6366f1;
+    --primary-light:#818cf8;
+    --accent:#ec4899;
+    --text-primary:#1e293b;
+    --text-secondary:#64748b;
+    --text-muted:#94a3b8;
+    --border:#e2e8f0;
+    --glow:rgba(99,102,241,0.25);
+    --radius-sm:12px;
+    --radius-md:16px;
+    --radius-lg:24px;
+  }
+  [data-theme="dark"]{
     --bg-primary:#0a0a0f;
     --bg-secondary:#12121a;
     --bg-card:#1a1a24;
@@ -644,9 +660,6 @@ const SHARED_CSS = `
     --text-muted:#64748b;
     --border:rgba(99,102,241,0.1);
     --glow:rgba(99,102,241,0.4);
-    --radius-sm:12px;
-    --radius-md:16px;
-    --radius-lg:24px;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -659,14 +672,18 @@ const SHARED_CSS = `
     min-height:100vh;
     overflow-x:hidden;
     position:relative;
+    transition:background .3s,color .3s;
   }
   .bg-grid{
     position:fixed;
     inset:0;
-    background-image:linear-gradient(rgba(99,102,241,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.03) 1px,transparent 1px);
+    background-image:linear-gradient(rgba(99,102,241,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.04) 1px,transparent 1px);
     background-size:60px 60px;
     pointer-events:none;
     z-index:0;
+  }
+  [data-theme="dark"] .bg-grid{
+    background-image:linear-gradient(rgba(99,102,241,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.03) 1px,transparent 1px);
   }
   .bg-glow{
     position:fixed;
@@ -674,7 +691,7 @@ const SHARED_CSS = `
     height:600px;
     border-radius:50%;
     filter:blur(120px);
-    opacity:0.15;
+    opacity:0.12;
     pointer-events:none;
     z-index:0;
   }
@@ -692,6 +709,7 @@ const SHARED_CSS = `
     margin-bottom:20px;
     position:relative;
     overflow:hidden;
+    box-shadow:0 4px 20px rgba(99,102,241,0.1);
   }
   .header::before{
     content:'';
@@ -722,8 +740,9 @@ const SHARED_CSS = `
     padding:24px;
     margin-top:20px;
     transition:all .3s ease;
+    box-shadow:0 4px 20px rgba(0,0,0,0.05);
   }
-  .card:hover{border-color:rgba(99,102,241,0.3)}
+  .card:hover{border-color:var(--primary);box-shadow:0 8px 30px rgba(99,102,241,0.15)}
   
   /* ---- Buttons ---- */
   .btn{
