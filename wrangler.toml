@@ -1,0 +1,8 @@
+name = "chat-app"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Optional: Add your domain here after deployment
+# routes = [
+#   { pattern = "chat.yourdomain.com", zone_name = "yourdomain.com" }
+# ]
