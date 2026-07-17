@@ -1,5 +1,13 @@
 name = "chat-app"
+main = "worker.js"
 compatibility_date = "2024-01-01"
 
-[site]
-bucket = "./"
+# KV Namespace for storing chat messages
+[[kv_namespaces]]
+binding = "CHAT_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+
+# Optional: Add your custom domain
+# routes = [
+#   { pattern = "chat.yourdomain.com", zone_name = "yourdomain.com" }
+# ]
