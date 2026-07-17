@@ -642,6 +642,7 @@ function getClassHTML() {
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
       height: 100%;
+      height: 100dvh; /* Dynamic viewport height for mobile */
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, sans-serif;
       background: #efe6dc;
@@ -732,7 +733,9 @@ function getClassHTML() {
     /* کانتینر اصلی */
     .main-container { 
       display: flex; 
+      flex: 1;
       height: calc(100% - 56px);
+      min-height: 0; /* برای flexbox */
     }
 
     /* سایدبار - مخفی در موبایل */
@@ -967,28 +970,162 @@ function getClassHTML() {
     }
     canvas { flex: 1; cursor: crosshair; }
 
-    /* ریسپانسیو - موبایل */
+    /* ============================================
+       ریسپانسیو - موبایل (کمتر از 768px)
+       ============================================ */
     @media (max-width: 768px) {
-      .sidebar, .whiteboard-container { display: none !important; }
-      .header-info > div:first-child { font-size: 14px; }
-      .btn-header { padding: 6px 10px; font-size: 12px; }
-      .invite-box { flex-wrap: wrap; }
-      .message { max-width: 92%; }
-      .chat-box { padding: 8px 6px; }
+      /* هدر فشرده */
+      .header {
+        padding: 10px 12px;
+      }
+      .header-info {
+        gap: 8px;
+      }
+      .header-info > div:first-child {
+        font-size: 14px;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .header .role {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+      .header-actions {
+        gap: 4px;
+      }
+      .btn-header {
+        padding: 6px 8px;
+        font-size: 11px;
+        border-radius: 16px;
+      }
+      .btn-meeting { display: none !important; } /* مخفی کردن دکمه جلسه در موبایل */
+
+      /* باکس دعوت */
+      .invite-box {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      .invite-box input {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .invite-box button {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+
+      /* مخفی کردن سایدبار و تخته سفید */
+      .sidebar, .whiteboard-container {
+        display: none !important;
+      }
+
+      /* چت تمام صفحه */
+      .chat-area {
+        width: 100%;
+      }
+      
+      .chat-box {
+        padding: 8px;
+        gap: 6px;
+        background: #ece5dd; /* پس‌زمینه واتساپ */
+      }
+
+      /* پیام‌ها */
+      .message {
+        max-width: 88%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        box-shadow: 0 1px 0.5px rgba(11,20,26,0.13);
+      }
+      .message.self {
+        background: #dcf8c6;
+        border-top-right-radius: 0;
+      }
+      .message.other {
+        background: #ffffff;
+        border-top-left-radius: 0;
+      }
+
+      .msg-sender {
+        font-size: 11px;
+        margin-bottom: 2px;
+      }
+      .msg-content {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .msg-footer {
+        margin-top: 2px;
+      }
+      .message .time {
+        font-size: 10px;
+        color: #999;
+      }
+
+      /* فایل‌ها */
+      .file-box {
+        padding: 8px;
+        gap: 8px;
+      }
+      .file-icon { font-size: 28px; }
+      .file-name { font-size: 12px; }
+      .download-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+
+      /* بخش ورودی */
+      .input-area {
+        padding: 8px;
+        background: #f0f0f0;
+        gap: 6px;
+      }
+      .upload-btn, .send-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+      }
+      .upload-btn {
+        font-size: 20px;
+      }
+      .send-btn {
+        font-size: 18px;
+      }
+      .input-area input[type="text"] {
+        padding: 10px 14px;
+        font-size: 15px;
+        border-radius: 22px;
+      }
+
+      /* Snackbar */
+      .snackbar {
+        bottom: 70px;
+        padding: 10px 20px;
+        font-size: 13px;
+      }
     }
 
-    /* تبلت */
+    /* ============================================
+       تبلت (769px تا 1024px)
+       ============================================ */
     @media (min-width: 769px) and (max-width: 1024px) {
       .sidebar { width: 220px; }
       .whiteboard-container { width: 280px; }
+      .message { max-width: 75%; }
     }
 
-    /* دسکتاپ */
+    /* ============================================
+       دسکتاپ (بیشتر از 1024px)
+       ============================================ */
     @media (min-width: 1025px) {
       .main-container {
         max-width: 1400px;
         margin: 0 auto;
       }
+      .message { max-width: 65%; }
     }
 
     /* Snackbar */
