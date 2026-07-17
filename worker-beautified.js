@@ -631,962 +631,321 @@ function getLoginHTML() {
 // صفحه کلاس
 // ============================================
 function getClassHTML() {
-  return `<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>کلاس مجازی</title>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="${CONFIG.THEME_COLOR}">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body {
-      height: 100%;
-      height: 100dvh; /* Dynamic viewport height for mobile */
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, sans-serif;
-      background: #efe6dc;
-    }
-
-    /* Safe area برای موبایل */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    
     body {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
+      background: #0b141a;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px;
     }
 
-    /* هدر - استایل واتساپ */
+    .phone {
+      max-width: 430px;
+      width: 100%;
+      height: calc(100vh - 20px);
+      height: calc(100dvh - 20px);
+      background: #111b21;
+      border-radius: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid #2a3942;
+    }
+
     .header {
-      background: ${CONFIG.THEME_COLOR};
-      color: white;
+      background: #1f2c33;
       padding: 12px 16px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      gap: 12px;
+      border-bottom: 1px solid #2a3942;
+      flex-shrink: 0;
     }
-    .header-info { display: flex; align-items: center; gap: 12px; }
-    .header-info > div:first-child { font-weight: 600; font-size: 16px; }
-    .header .role {
-      font-size: 11px;
-      background: rgba(255,255,255,0.2);
-      padding: 3px 8px;
-      border-radius: 12px;
-    }
-    .header-actions { display: flex; gap: 8px; }
-    .btn-header {
-      border: none;
-      padding: 8px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
-    .btn-logout { background: rgba(255,255,255,0.15); color: white; }
-    .btn-clear { background: #f59e0b; color: white; }
-    .btn-meeting {
-      background: #8b5cf6;
-      color: white;
-      text-decoration: none;
-      display: none;
-      border-radius: 20px;
-      padding: 8px 14px;
-      font-size: 13px;
-    }
-    .btn-header:active { transform: scale(0.95); }
-
-    /* باکس دعوت - واتساپ استایل */
-    .invite-box {
-      background: #00a884;
-      color: white;
-      padding: 12px 16px;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-    }
-    .invite-box input {
-      flex: 1;
-      min-width: 0;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      direction: ltr;
-    }
-    .invite-box button {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    /* کانتینر اصلی */
-    .main-container { 
-      display: flex; 
-      flex: 1;
-      height: calc(100% - 56px);
-      min-height: 0; /* برای flexbox */
-    }
-
-    /* سایدبار - مخفی در موبایل */
-    .sidebar {
-      width: 280px;
-      background: white;
-      border-left: 1px solid #e0e0e0;
-      display: flex;
-      flex-direction: column;
-    }
-    .sidebar-header {
-      padding: 16px;
-      background: #f5f5f5;
-      border-bottom: 1px solid #e0e0e0;
-      font-weight: 600;
-      color: ${CONFIG.THEME_COLOR};
-    }
-    .sidebar-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
-    }
-    .user-item {
-      padding: 12px;
-      background: #f8f8f8;
-      margin-bottom: 6px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-    .user-item:active { background: #e8e8e8; }
-    .user-item .dot {
-      width: 10px;
-      height: 10px;
-      background: #00a884;
+    .avatar {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      margin-left: 12px;
-      animation: pulse 2s infinite;
-    }
-    .user-item.teacher {
-      background: #e8f5e9;
-      font-weight: 500;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* چت - واتساپ استایل */
-    .chat-area {
-      flex: 1;
+      background: #2a6f8f;
       display: flex;
-      flex-direction: column;
-      background: #efe6dc;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+      font-size: 18px;
     }
-    .chat-box {
+    .contact-info { flex: 1; color: #d1d7db; }
+    .contact-name { font-weight: 600; font-size: 15px; }
+    .contact-status { font-size: 12px; color: #8696a0; }
+    .header-actions { display: flex; gap: 14px; color: #aebac1; font-size: 18px; }
+    .header-btn { background: none; border: none; color: #aebac1; font-size: 18px; cursor: pointer; padding: 4px; }
+    .header-btn:active { opacity: 0.7; }
+
+    .chat-body {
       flex: 1;
-      padding: 10px 8px;
+      padding: 10px 12px;
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
       gap: 4px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111b21"/><path d="M10 10 L90 10 L90 90 L10 90 Z" fill="none" stroke="%232a3942" stroke-width="0.5"/></svg>');
+      background-size: 28px 28px;
     }
-    
-    /* پیام‌ها - واتساپ */
-    .message {
-      background: white;
-      padding: 8px 10px;
+    .chat-body::-webkit-scrollbar { width: 4px; }
+    .chat-body::-webkit-scrollbar-track { background: transparent; }
+    .chat-body::-webkit-scrollbar-thumb { background: #3b4a54; border-radius: 10px; }
+
+    .date-divider {
+      text-align: center;
+      font-size: 12px;
+      color: #8696a0;
+      background: #1f2c33;
+      padding: 4px 12px;
       border-radius: 8px;
-      max-width: 85%;
-      align-self: flex-start;
-      box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-      position: relative;
-    }
-    .message.self {
-      align-self: flex-end;
-      background: #dcf8c6;
-    }
-    .message.other {
-      align-self: flex-start;
-      border-top-left-radius: 0;
-    }
-    
-    /* نام فرستنده */
-    .msg-sender {
-      font-weight: 600;
-      font-size: 13px;
-      color: #00a884;
-      margin-bottom: 4px;
-    }
-    .message.self .msg-sender { display: none; }
-    
-    .msg-content {
-      font-size: 14px;
-      line-height: 1.5;
-      color: #111;
-      word-wrap: break-word;
-    }
-    
-    .msg-footer {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-top: 4px;
-      gap: 6px;
-    }
-    .message .time {
-      font-size: 11px;
-      color: #999;
-    }
-    .del-btn {
-      background: none;
-      border: none;
-      color: #999;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0;
-      display: none;
-      line-height: 1;
-    }
-    .message:hover .del-btn { display: inline; }
-    .del-btn:active { color: #ef4444; }
-    
-    .message a { color: #0088cc; text-decoration: none; word-break: break-all; }
-    .message img {
-      max-width: 100%;
-      border-radius: 6px;
-      cursor: pointer;
-      display: block;
-      margin-top: 6px;
+      align-self: center;
+      margin: 8px 0;
     }
 
-    /* باکس فایل */
+    .message {
+      max-width: 85%;
+      padding: 6px 10px 4px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.45;
+      word-wrap: break-word;
+      animation: fade 0.25s ease;
+    }
+    @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .message.incoming {
+      background: #202c33;
+      color: #e9edef;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .message.outgoing {
+      background: #005c4b;
+      color: #e9edef;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .message .time { font-size: 11px; color: #8696a0; display: block; text-align: left; margin-top: 2px; }
+    .message.outgoing .time { color: #7a9c8a; }
+    .message .status { font-size: 14px; margin-right: 2px; }
+    .message a { color: #53bdeb; text-decoration: none; }
+    .message img { max-width: 100%; border-radius: 6px; cursor: pointer; display: block; margin-top: 4px; }
+
     .file-box {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: #f5f5f5;
-      padding: 10px 12px;
+      background: rgba(255,255,255,0.05);
+      padding: 8px 12px;
       border-radius: 8px;
-      margin-top: 6px;
-    }
-    .file-icon { font-size: 32px; }
-    .file-info { display: flex; flex-direction: column; }
-    .file-name { font-size: 13px; font-weight: 500; color: #111; }
-    .download-btn {
-      display: inline-block;
-      padding: 6px 12px;
-      background: #00a884;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
       margin-top: 4px;
     }
-    .download-btn:active { background: #008f6f; }
+    .file-icon { font-size: 28px; }
+    .file-info { display: flex; flex-direction: column; }
+    .file-name { font-size: 13px; font-weight: 500; }
+    .download-btn {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.15);
+      color: #e9edef;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 3px;
+    }
 
-    /* بخش ورودی - واتساپ استایل */
-    .input-area {
+    .footer {
+      background: #1f2c33;
+      padding: 8px 10px;
       display: flex;
-      padding: 10px 8px;
-      background: #f0f0f0;
       align-items: center;
       gap: 8px;
-    }
-    .upload-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #00a884;
-      color: white;
-      border: none;
-      font-size: 22px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border-top: 1px solid #2a3942;
       flex-shrink: 0;
-      transition: transform 0.2s;
     }
-    .upload-btn:active { transform: scale(0.9); }
-    .upload-spinner {
-      display: none;
-      font-size: 18px;
-    }
-    .input-area input[type="text"] {
-      flex: 1;
-      padding: 12px 16px;
-      border: none;
-      border-radius: 24px;
-      font-size: 15px;
-      background: white;
-      outline: none;
-    }
-    .send-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #00a884;
-      color: white;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: transform 0.2s;
-    }
-    .send-btn:active { transform: scale(0.9); }
+    .footer-btn { color: #aebac1; font-size: 22px; background: none; border: none; cursor: pointer; padding: 4px 6px; flex-shrink: 0; }
+    .footer-btn:active { opacity: 0.7; }
+    .input-area { flex: 1; background: #2a3942; border-radius: 22px; padding: 4px 12px; display: flex; align-items: center; min-width: 0; }
+    .input-area input { width: 100%; background: transparent; border: none; outline: none; color: #d1d7db; font-size: 14px; padding: 6px 0; }
+    .input-area input::placeholder { color: #8696a0; }
 
-    /* تخته سفید */
-    .whiteboard-container {
-      width: 320px;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid #e0e0e0;
-    }
-    .whiteboard-header {
-      padding: 14px;
-      background: #f5f5f5;
-      border-bottom: 1px solid #e0e0e0;
-      text-align: center;
-      font-weight: 600;
-      font-size: 14px;
-      color: ${CONFIG.THEME_COLOR};
-    }
-    canvas { flex: 1; cursor: crosshair; }
-
-    /* ============================================
-       ریسپانسیو - موبایل (کمتر از 768px)
-       ============================================ */
-    @media (max-width: 768px) {
-      /* هدر فشرده */
-      .header {
-        padding: 10px 12px;
-      }
-      .header-info {
-        gap: 8px;
-      }
-      .header-info > div:first-child {
-        font-size: 14px;
-        max-width: 120px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .header .role {
-        font-size: 10px;
-        padding: 2px 6px;
-      }
-      .header-actions {
-        gap: 4px;
-      }
-      .btn-header {
-        padding: 6px 8px;
-        font-size: 11px;
-        border-radius: 16px;
-      }
-      .btn-meeting { display: none !important; } /* مخفی کردن دکمه جلسه در موبایل */
-
-      /* باکس دعوت */
-      .invite-box {
-        padding: 10px 12px;
-        font-size: 12px;
-      }
-      .invite-box input {
-        padding: 6px 10px;
-        font-size: 11px;
-      }
-      .invite-box button {
-        padding: 6px 10px;
-        font-size: 11px;
-      }
-
-      /* مخفی کردن سایدبار و تخته سفید */
-      .sidebar, .whiteboard-container {
-        display: none !important;
-      }
-
-      /* چت تمام صفحه */
-      .chat-area {
-        width: 100%;
-      }
-      
-      .chat-box {
-        padding: 8px;
-        gap: 6px;
-        background: #ece5dd; /* پس‌زمینه واتساپ */
-      }
-
-      /* پیام‌ها */
-      .message {
-        max-width: 88%;
-        padding: 8px 10px;
-        border-radius: 8px;
-        font-size: 14px;
-        box-shadow: 0 1px 0.5px rgba(11,20,26,0.13);
-      }
-      .message.self {
-        background: #dcf8c6;
-        border-top-right-radius: 0;
-      }
-      .message.other {
-        background: #ffffff;
-        border-top-left-radius: 0;
-      }
-
-      .msg-sender {
-        font-size: 11px;
-        margin-bottom: 2px;
-      }
-      .msg-content {
-        font-size: 14px;
-        line-height: 1.4;
-      }
-      .msg-footer {
-        margin-top: 2px;
-      }
-      .message .time {
-        font-size: 10px;
-        color: #999;
-      }
-
-      /* فایل‌ها */
-      .file-box {
-        padding: 8px;
-        gap: 8px;
-      }
-      .file-icon { font-size: 28px; }
-      .file-name { font-size: 12px; }
-      .download-btn {
-        padding: 4px 8px;
-        font-size: 11px;
-      }
-
-      /* بخش ورودی */
-      .input-area {
-        padding: 8px;
-        background: #f0f0f0;
-        gap: 6px;
-      }
-      .upload-btn, .send-btn {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-      }
-      .upload-btn {
-        font-size: 20px;
-      }
-      .send-btn {
-        font-size: 18px;
-      }
-      .input-area input[type="text"] {
-        padding: 10px 14px;
-        font-size: 15px;
-        border-radius: 22px;
-      }
-
-      /* Snackbar */
-      .snackbar {
-        bottom: 70px;
-        padding: 10px 20px;
-        font-size: 13px;
-      }
-    }
-
-    /* ============================================
-       تبلت (769px تا 1024px)
-       ============================================ */
-    @media (min-width: 769px) and (max-width: 1024px) {
-      .sidebar { width: 220px; }
-      .whiteboard-container { width: 280px; }
-      .message { max-width: 75%; }
-    }
-
-    /* ============================================
-       دسکتاپ (بیشتر از 1024px)
-       ============================================ */
-    @media (min-width: 1025px) {
-      .main-container {
-        max-width: 1400px;
-        margin: 0 auto;
-      }
-      .message { max-width: 65%; }
-    }
-
-    /* Snackbar */
     .snackbar {
       position: fixed;
-      bottom: 80px;
+      bottom: 100px;
       left: 50%;
       transform: translateX(-50%);
-      background: #323232;
-      color: white;
-      padding: 12px 24px;
+      background: #1f2c33;
+      color: #d1d7db;
+      padding: 10px 20px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
       z-index: 1000;
-      animation: slideUp 0.3s ease;
+      border: 1px solid #2a3942;
     }
-    @keyframes slideUp {
-      from { bottom: -50px; opacity: 0; }
-      to { bottom: 80px; opacity: 1; }
+
+    @media (max-width: 430px) {
+      body { padding: 0; }
+      .phone { height: 100vh; height: 100dvh; border-radius: 0; border: none; }
+      .header { padding: 10px 14px; }
+      .contact-name { font-size: 14px; }
+      .message { max-width: 88%; }
+    }
+    @media (min-width: 431px) and (max-width: 768px) {
+      .phone { height: calc(100dvh - 20px); border-radius: 24px; }
+    }
+    @media (min-width: 769px) {
+      body { align-items: center; padding: 20px; }
+      .phone { max-height: 85vh; border-radius: 24px; }
     }
   </style>
 </head>
 <body>
-  <!-- هدر - واتساپ استایل -->
-  <div class="header">
-    <div class="header-info">
-      <div><span id="className"></span></div>
-      <div id="myRole" class="role"></div>
-    </div>
-    <div class="header-actions">
-      <a id="meetingBtn" class="btn-meeting" href="#" target="_blank">🎙️</a>
-      <button id="clearBtn" class="btn-header btn-clear" style="display:none;" onclick="clearClass()">🗑️</button>
-      <button class="btn-header btn-logout" onclick="logout()">🚪</button>
-    </div>
-  </div>
-
-  <!-- باکس دعوت -->
-  <div class="invite-box" id="inviteBox">
-    <input type="text" id="inviteLink" readonly placeholder="لینک کلاس">
-    <button onclick="copyLink()">📋</button>
-    <input type="text" id="meetingLinkInput" placeholder="لینک جلسه">
-    <button onclick="saveMeetingLink()">✓</button>
-  </div>
-
-  <!-- محتوای اصلی -->
-  <div class="main-container">
-    <!-- سایدبار -->
-    <div class="sidebar">
-      <div class="sidebar-header">👥 آنلاین</div>
-      <div class="sidebar-content" id="onlineList"></div>
-    </div>
-
-    <!-- چت -->
-    <div class="chat-area">
-      <div class="chat-box" id="chatBox"></div>
-      <div class="input-area">
-        <input type="file" id="fileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.zip,.rar" onchange="handleFileUpload()">
-        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-          📎
-          <div id="uploadSpinner" class="upload-spinner">⏳</div>
-        </button>
-        <input type="text" id="msgInput" placeholder="پیام..." onkeypress="if(event.key==='Enter') sendMessage()">
-        <button class="send-btn" onclick="sendMessage()">➤</button>
+  <div class="phone">
+    <div class="header">
+      <div class="avatar">📚</div>
+      <div class="contact-info">
+        <div class="contact-name"><span id="className"></span></div>
+        <div class="contact-status"><span id="myRole"></span> • آنلاین</div>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" onclick="logout()" title="خروج">🚪</button>
+        <button id="clearBtn" class="header-btn" style="display:none;" onclick="clearClass()" title="پاک کردن">🗑️</button>
       </div>
     </div>
 
-    <!-- تخته سفید -->
-    <div class="whiteboard-container">
-      <div class="whiteboard-header">✏️ تخته سفید</div>
-      <canvas id="whiteboard"></canvas>
+    <div class="chat-body" id="chatBox"></div>
+
+    <div class="footer">
+      <button class="footer-btn" onclick="document.getElementById('fileInput').click()">📎</button>
+      <input type="file" id="fileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.zip,.rar" onchange="handleFileUpload()">
+      <div class="input-area">
+        <input type="text" id="msgInput" placeholder="پیام" onkeypress="if(event.key==='Enter') sendMessage()">
+      </div>
+      <button class="footer-btn" onclick="sendMessage()">➤</button>
     </div>
   </div>
 
   <script>
-    // متغیرهای سراسری
     const username = localStorage.getItem('user');
     const classId = localStorage.getItem('classId');
     const role = localStorage.getItem('role');
     let lastMessageId = 0;
 
-    // ریدایرکت اگر لاگین نکرده
-    if (!username || !classId) {
-      window.location.href = '/login';
-    }
+    if (!username || !classId) window.location.href = '/login';
 
-    // تنظیمات اولیه UI
     document.getElementById('className').innerText = classId;
     document.getElementById('myRole').innerText = role === 'teacher' ? 'معلم 👨‍🏫' : 'دانش‌آموز 📚';
+    if (role === 'teacher') document.getElementById('clearBtn').style.display = 'block';
 
-    // تنظیمات مخصوص معلم
-    if (role === 'teacher') {
-      document.getElementById('inviteBox').style.display = 'flex';
-      document.getElementById('clearBtn').style.display = 'inline-block';
-
-      const baseUrl = window.location.origin + '/login';
-      document.getElementById('inviteLink').value = baseUrl + '?classId=' + encodeURIComponent(classId);
-    }
-
-    // بررسی لینک جلسه
-    checkMeetingLink();
-
-    async function checkMeetingLink() {
-      try {
-        const res = await fetch('/api/get-meeting-link?classId=' + classId);
-        const data = await res.json();
-        const btn = document.getElementById('meetingBtn');
-
-        if (data.link) {
-          btn.href = data.link;
-          btn.style.display = 'inline-block';
-          if (role === 'teacher') {
-            document.getElementById('meetingLinkInput').value = data.link;
-          }
-        }
-      } catch (e) {
-        console.error('خطا در بررسی لینک جلسه:', e);
-      }
-    }
-
-    async function saveMeetingLink() {
-      const link = document.getElementById('meetingLinkInput').value.trim();
-      if (!link) {
-        showSnackbar('لطفاً لینک جلسه را وارد کنید');
-        return;
-      }
-      await fetch('/api/set-meeting-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classId, link })
-      });
-      showSnackbar('✅ لینک ذخیره شد');
-      checkMeetingLink();
-    }
-
-    function copyLink() {
-      const copyText = document.getElementById('inviteLink');
-      copyText.select();
-      document.execCommand('copy');
-      showSnackbar('📋 لینک کپی شد');
+    function showSnackbar(msg) {
+      const s = document.createElement('div');
+      s.className = 'snackbar';
+      s.textContent = msg;
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 2500);
     }
 
     async function logout() {
-      await fetch('/api/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, classId })
-      });
+      await fetch('/api/logout', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username, classId}) });
       localStorage.clear();
       window.location.href = '/login';
     }
 
     async function clearClass() {
-      if (!confirm('⚠️ آیا مطمئن هستید؟')) return;
-      await fetch('/api/clear-class', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classId, role })
-      });
+      if (!confirm('⚠️ پاک شود؟')) return;
+      await fetch('/api/clear-class', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({classId, role}) });
       lastMessageId = 0;
       document.getElementById('chatBox').innerHTML = '';
-      fetchWhiteboard();
-      showSnackbar('✅ کلاس پاک شد');
+      showSnackbar('✅ پاک شد');
     }
 
-    async function deleteMessage(id) {
-      await fetch('/api/delete-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, role })
-      });
-      document.getElementById('msg-' + id)?.remove();
-    }
-
-    function showSnackbar(message) {
-      const existing = document.querySelector('.snackbar');
-      if (existing) existing.remove();
-      const snack = document.createElement('div');
-      snack.className = 'snackbar';
-      snack.textContent = message;
-      document.body.appendChild(snack);
-      setTimeout(() => snack.remove(), 2500);
-    }
-
-    // ----------------------------------------
-    // آپلود فایل
-    // ----------------------------------------
     async function handleFileUpload() {
-      const fileInput = document.getElementById('fileInput');
-      if (!fileInput.files?.length) return;
-
-      const file = fileInput.files[0];
-      const spinner = document.getElementById('uploadSpinner');
-      spinner.style.display = 'flex';
-
+      const f = document.getElementById('fileInput');
+      if (!f.files?.length) return;
+      const file = f.files[0];
       try {
         if (file.type.startsWith('image/')) {
-          await uploadImage(file);
+          const img = await loadImage(file);
+          const c = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > 800) { h = h * (800/w); w = 800; }
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          const b64 = c.toDataURL('image/jpeg', 0.7);
+          await sendMsg('<img src="'+b64+'" onclick="window.open(this.src)">', true);
         } else {
-          await uploadFile(file);
+          const fd = new FormData();
+          fd.append('file', file);
+          fd.append('classId', classId);
+          const r = await fetch('/api/upload-file', { method: 'POST', body: fd });
+          const d = await r.json();
+          if (d.success) {
+            const ic = d.type.includes('pdf') ? '📕' : d.type.includes('zip') ? '🗜️' : '📄';
+            await sendMsg('<div class="file-box"><div class="file-icon">'+ic+'</div><div class="file-info"><span class="file-name">'+d.name+'</span><a href="'+d.url+'" class="download-btn" target="_blank">⬇️ دانلود</a></div></div>', true);
+          }
         }
-      } catch (e) {
-        showSnackbar('❌ خطا در ارسال');
-      } finally {
-        spinner.style.display = 'none';
-        fileInput.value = '';
-      }
-    }
-
-    async function uploadImage(file) {
-      const img = await loadImage(file);
-      const canvas = document.createElement('canvas');
-
-      let { width, height } = img;
-      if (width > ${CONFIG.MAX_IMAGE_WIDTH}) {
-        height = height * (${CONFIG.MAX_IMAGE_WIDTH} / width);
-        width = ${CONFIG.MAX_IMAGE_WIDTH};
-      }
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      const base64String = canvas.toDataURL('image/jpeg', ${CONFIG.IMAGE_QUALITY});
-
-      const chatContent = '<img src="' + base64String + '" onclick="window.open(this.src)">';
-      await sendChatMessage(chatContent, true);
-    }
-
-    async function uploadFile(file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('classId', classId);
-
-      const res = await fetch('/api/upload-file', { method: 'POST', body: formData });
-      const data = await res.json();
-
-      if (!data.success) {
-        showSnackbar(data.error || '❌ خطا در آپلود');
-        return;
-      }
-
-      const icon = getFileIcon(data.type);
-      const chatContent = '<div class="file-box"><div class="file-icon">' + icon + '</div><div class="file-info"><span class="file-name">' + data.name + '</span><a href="' + data.url + '" class="download-btn" target="_blank">⬇️ دانلود</a></div></div>';
-      await sendChatMessage(chatContent, true);
+      } catch(e) { showSnackbar('❌ خطا'); }
+      f.value = '';
     }
 
     function loadImage(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-          img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = e => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = e.target.result; };
+        r.onerror = rej;
+        r.readAsDataURL(file);
       });
     }
 
-    function getFileIcon(mimeType) {
-      if (mimeType.includes('pdf')) return '📕';
-      if (mimeType.includes('zip') || mimeType.includes('rar')) return '🗜️';
-      return '📄';
+    async function sendMsg(text, isMedia = false) {
+      await fetch('/api/send-message', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({classId, username, text, isMedia}) });
     }
 
-    async function sendChatMessage(text, isMedia = false) {
-      await fetch('/api/send-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classId, username, text, isMedia })
-      });
-    }
-
-    // ----------------------------------------
-    // پیام‌ها
-    // ----------------------------------------
     async function fetchMessages() {
       try {
-        const res = await fetch('/api/get-messages?classId=' + classId + '&afterId=' + lastMessageId);
-        const data = await res.json();
-        data.forEach(msg => {
-          addMessageToUI(msg);
-          lastMessageId = Math.max(lastMessageId, msg.id);
-        });
-      } catch (e) {
-        console.error('خطا در دریافت پیام‌ها:', e);
-      }
+        const r = await fetch('/api/get-messages?classId=' + classId + '&afterId=' + lastMessageId);
+        const data = await r.json();
+        data.forEach(m => { addMsg(m); lastMessageId = Math.max(lastMessageId, m.id); });
+      } catch(e) {}
     }
 
-    function addMessageToUI(msg) {
-      const chatBox = document.getElementById('chatBox');
+    function addMsg(m) {
+      const cb = document.getElementById('chatBox');
       const div = document.createElement('div');
-      const isSelf = msg.user === username;
-      div.className = 'message ' + (isSelf ? 'self' : 'other');
-      div.id = 'msg-' + msg.id;
-
-      // پردازش لینک‌ها
-      let processedText = msg.text;
-      const urlRegex = /(https?:\\/\\/[^\\s]+)/g;
-      processedText = processedText.replace(urlRegex, (url) => {
-        if (url.match(/\\.(jpeg|jpg|gif|png|webp|svg)$/i)) {
-          return '📸 <a href="' + url + '" target="_blank">مشاهده عکس</a>';
-        }
-        return '<a href="' + url + '" target="_blank">' + url + '</a>';
-      });
-
-      // HTML واتساپ استایل
-      div.innerHTML = 
-        '<div class="msg-sender">' + msg.user + '</div>' +
-        '<div class="msg-content">' + processedText + '</div>' +
-        '<div class="msg-footer">' +
-          '<span class="time">' + msg.time + '</span>' +
-          '<button class="del-btn" onclick="deleteMessage(' + msg.id + ')">🗑️</button>' +
-        '</div>';
+      const isSelf = m.user === username;
+      div.className = 'message ' + (isSelf ? 'outgoing' : 'incoming');
       
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      let txt = m.text;
+      txt = txt.replace(/(https?:\/\/[^\s]+)/g, u => '<a href="'+u+'" target="_blank">'+u+'</a>');
+      
+      div.innerHTML = txt + '<span class="time">' + m.time + (isSelf ? ' <span class="status">✓</span>' : '') + '</span>';
+      cb.appendChild(div);
+      cb.scrollTop = cb.scrollHeight;
     }
 
     async function sendMessage() {
-      const input = document.getElementById('msgInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      await sendChatMessage(text);
-      input.value = '';
+      const i = document.getElementById('msgInput');
+      const t = i.value.trim();
+      if (!t) return;
+      await sendMsg(t);
+      i.value = '';
       fetchMessages();
     }
 
-    // ----------------------------------------
-    // حضور آنلاین
-    // ----------------------------------------
-    async function heartbeat() {
-      try {
-        const res = await fetch('/api/heartbeat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, classId, role })
-        });
-        const data = await res.json();
-        renderOnlineUsers(data.onlineUsers || []);
-      } catch (e) {
-        console.error('خطا در heartbeat:', e);
-      }
-    }
-
-    function renderOnlineUsers(users) {
-      const list = document.getElementById('onlineList');
-      list.innerHTML = '';
-      users.forEach(u => {
-        const div = document.createElement('div');
-        div.className = 'user-item' + (u.role === 'teacher' ? ' teacher' : '');
-        div.innerHTML = '<div class="dot"></div>' + u.username + (u.role === 'teacher' ? ' 👨‍🏫' : '');
-        list.appendChild(div);
-      });
-    }
-
-    // ----------------------------------------
-    // تخته سفید
-    // ----------------------------------------
-    const canvas = document.getElementById('whiteboard');
-    const ctx = canvas.getContext('2d');
-    let drawing = false;
-    let saveTimeout = null;
-
-    // تنظیم اندازه canvas
-    function resizeCanvas() {
-      const container = canvas.parentElement;
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '${CONFIG.THEME_COLOR}';
-
-    if (role === 'teacher') {
-      // Mouse events
-      canvas.addEventListener('mousedown', startDraw);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('mouseup', endDraw);
-      canvas.addEventListener('mouseleave', endDraw);
-
-      // Touch events
-      canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        startDraw({ offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top });
-      });
-      canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        draw({ offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top });
-      });
-      canvas.addEventListener('touchend', endDraw);
-    }
-
-    function startDraw(e) {
-      drawing = true;
-      ctx.beginPath();
-      ctx.moveTo(e.offsetX, e.offsetY);
-    }
-
-    function draw(e) {
-      if (!drawing) return;
-      ctx.lineTo(e.offsetX, e.offsetY);
-      ctx.stroke();
-    }
-
-    function endDraw() {
-      if (!drawing) return;
-      drawing = false;
-      debounceSaveWhiteboard();
-    }
-
-    function debounceSaveWhiteboard() {
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(saveWhiteboard, 500);
-    }
-
-    function saveWhiteboard() {
-      const data = canvas.toDataURL();
-      fetch('/api/update-whiteboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classId, data })
-      });
-    }
-
-    async function fetchWhiteboard() {
-      try {
-        const res = await fetch('/api/get-whiteboard?classId=' + classId);
-        const data = await res.json();
-        if (data.data) {
-          const img = new Image();
-          img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          };
-          img.src = data.data;
-        }
-      } catch (e) {
-        console.error('خطا در دریافت تخته سفید:', e);
-      }
-    }
-
-    // ----------------------------------------
-    // شروع Polling
-    // ----------------------------------------
-    setInterval(fetchMessages, ${CONFIG.POLL_INTERVALS.messages});
-    setInterval(heartbeat, ${CONFIG.POLL_INTERVALS.heartbeat});
-    setInterval(fetchWhiteboard, ${CONFIG.POLL_INTERVALS.whiteboard});
-
-    // فراخوانی اولیه
+    setInterval(fetchMessages, 2000);
     fetchMessages();
-    heartbeat();
-    fetchWhiteboard();
   </script>
 </body>
 </html>`;
 }
+
