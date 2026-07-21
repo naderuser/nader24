@@ -1,0 +1,21 @@
+name = "nadervpn"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[site]
+bucket = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nadervpn-db"
+database_id = "your-database-id-here"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "your-kv-namespace-id-here"
+
+[vars]
+APP_NAME = "NaderVPN"
+DEFAULT_LANGUAGE = "fa"
+DEFAULT_THEME = "dark"

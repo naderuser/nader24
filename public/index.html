@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد | NaderVPN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">🔐</div>
+          <div class="logo-text">
+            <h1>NaderVPN</h1>
+            <span>پنل مدیریت</span>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">داشبورد</span>
+        </a>
+        <a href="#" class="nav-item" data-page="users">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">کاربران</span>
+        </a>
+        <a href="#" class="nav-item" data-page="nodes">
+          <span class="nav-icon">🖥️</span>
+          <span class="nav-text">نودها</span>
+        </a>
+        <a href="#" class="nav-item" data-page="logs">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">لاگ‌ها</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">تنظیمات</span>
+        </a>
+        <a href="#" class="nav-item" data-page="backup">
+          <span class="nav-icon">💾</span>
+          <span class="nav-text">پشتیبان‌گیری</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <a href="#" class="nav-item" id="logoutBtn">
+          <span class="nav-icon">🚪</span>
+          <span class="nav-text">خروج</span>
+        </a>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <button class="menu-toggle" id="menuToggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        
+        <div class="search-bar">
+          <input type="text" placeholder="جستجو..." id="globalSearch">
+        </div>
+        
+        <div class="top-actions">
+          <div class="dropdown">
+            <button class="btn-icon" id="langBtn">🌐</button>
+            <div class="dropdown-menu" id="langMenu">
+              <a href="#" data-lang="fa">فارسی</a>
+              <a href="#" data-lang="en">English</a>
+            </div>
+          </div>
+          <div class="dropdown">
+            <button class="btn-icon" id="themeBtn">🌙</button>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Page Content -->
+      <div class="page-content" id="pageContent">
+        <!-- Dashboard Page -->
+        <div class="page active" id="dashboardPage">
+          <h2 class="page-title">داشبورد</h2>
+          
+          <!-- Stats Cards -->
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-info">
+                <span class="stat-value" id="statTotalUsers">-</span>
+                <span class="stat-label">کل کاربران</span>
+              </div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-icon">✅</div>
+              <div class="stat-info">
+                <span class="stat-value" id="statActiveUsers">-</span>
+                <span class="stat-label">کاربران فعال</span>
+              </div>
+            </div>
+            <div class="stat-card warning">
+              <div class="stat-icon">⏰</div>
+              <div class="stat-info">
+                <span class="stat-value" id="statExpiredUsers">-</span>
+                <span class="stat-label">کاربران منقضی</span>
+              </div>
+            </div>
+            <div class="stat-card info">
+              <div class="stat-icon">📊</div>
+              <div class="stat-info">
+                <span class="stat-value" id="statOnlineUsers">-</span>
+                <span class="stat-label">کاربران آنلاین</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h3>ترافیک</h3>
+              <canvas id="trafficChart"></canvas>
+            </div>
+            <div class="chart-card">
+              <h3>رشد کاربران</h3>
+              <canvas id="userGrowthChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Recent Activity -->
+          <div class="activity-section">
+            <div class="activity-card">
+              <h3>آخرین کاربران</h3>
+              <div class="activity-list" id="latestUsers"></div>
+            </div>
+            <div class="activity-card">
+              <h3>آخرین فعالیت‌ها</h3>
+              <div class="activity-list" id="recentLogs"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Users Page -->
+        <div class="page" id="usersPage">
+          <div class="page-header">
+            <h2 class="page-title">مدیریت کاربران</h2>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="addUserBtn">
+                <span>+</span> کاربر جدید
+              </button>
+              <button class="btn btn-secondary" id="importUsersBtn">
+                <span>📥</span> ورود
+              </button>
+              <button class="btn btn-secondary" id="exportUsersBtn">
+                <span>📤</span> خروج
+              </button>
+            </div>
+          </div>
+          
+          <!-- Filters -->
+          <div class="filters-bar">
+            <input type="text" placeholder="جستجو..." id="userSearch" class="search-input">
+            <select id="userStatusFilter" class="filter-select">
+              <option value="">همه وضعیت‌ها</option>
+              <option value="active">فعال</option>
+              <option value="expired">منقضی</option>
+              <option value="disabled">غیرفعال</option>
+            </select>
+            <select id="userSort" class="filter-select">
+              <option value="created_at-desc">جدیدترین</option>
+              <option value="created_at-asc">قدیمی‌ترین</option>
+              <option value="username-asc">نام (الف-ی)</option>
+              <option value="username-desc">نام (ی-الف)</option>
+              <option value="expire_at-asc">زودترین انقضا</option>
+            </select>
+          </div>
+          
+          <!-- Bulk Actions -->
+          <div class="bulk-actions" id="bulkActions" style="display: none;">
+            <span id="selectedCount">0 مورد انتخاب شده</span>
+            <button class="btn btn-sm" id="bulkRenewBtn">تمدید</button>
+            <button class="btn btn-sm" id="bulkTrafficBtn">بازنشانی ترافیک</button>
+            <button class="btn btn-sm" id="bulkEnableBtn">فعال‌سازی</button>
+            <button class="btn btn-sm" id="bulkDisableBtn">غیرفعال‌سازی</button>
+            <button class="btn btn-sm btn-danger" id="bulkDeleteBtn">حذف</button>
+          </div>
+          
+          <!-- Users Table -->
+          <div class="table-container">
+            <table class="data-table" id="usersTable">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="selectAllUsers"></th>
+                  <th>کاربر</th>
+                  <th>پروتکل</th>
+                  <th>وضعیت</th>
+                  <th>انقضا</th>
+                  <th>ترافیک</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="7" class="loading">در حال بارگذاری...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Pagination -->
+          <div class="pagination" id="usersPagination"></div>
+        </div>
+        
+        <!-- Nodes Page -->
+        <div class="page" id="nodesPage">
+          <div class="page-header">
+            <h2 class="page-title">مدیریت نودها</h2>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="addNodeBtn">
+                <span>+</span> نود جدید
+              </button>
+              <button class="btn btn-secondary" id="importNodesBtn">
+                <span>📥</span> ورود
+              </button>
+              <button class="btn btn-secondary" id="exportNodesBtn">
+                <span>📤</span> خروج
+              </button>
+            </div>
+          </div>
+          
+          <div class="table-container">
+            <table class="data-table" id="nodesTable">
+              <thead>
+                <tr>
+                  <th>نام</th>
+                  <th>آدرس</th>
+                  <th>پورت</th>
+                  <th>پروتکل</th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="nodesTableBody">
+                <tr><td colspan="6" class="loading">در حال بارگذاری...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Logs Page -->
+        <div class="page" id="logsPage">
+          <h2 class="page-title">لاگ‌ها</h2>
+          
+          <div class="filters-bar">
+            <select id="logActionFilter" class="filter-select">
+              <option value="">همه عملیات‌ها</option>
+              <option value="login">ورود</option>
+              <option value="create_user">ایجاد کاربر</option>
+              <option value="delete_user">حذف کاربر</option>
+              <option value="update_user">ویرایش کاربر</option>
+              <option value="subscription">اشتراک</option>
+            </select>
+          </div>
+          
+          <div class="table-container">
+            <table class="data-table" id="logsTable">
+              <thead>
+                <tr>
+                  <th>زمان</th>
+                  <th>عملیات</th>
+                  <th>هدف</th>
+                  <th>IP</th>
+                  <th>جزئیات</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody">
+                <tr><td colspan="5" class="loading">در حال بارگذاری...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="pagination" id="logsPagination"></div>
+        </div>
+        
+        <!-- Settings Page -->
+        <div class="page" id="settingsPage">
+          <h2 class="page-title">تنظیمات</h2>
+          
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h3>تنظیمات عمومی</h3>
+              <form id="generalSettingsForm">
+                <div class="form-group">
+                  <label>نام پنل</label>
+                  <input type="text" name="app_name" id="appName">
+                </div>
+                <div class="form-group">
+                  <label>آدرس پنل</label>
+                  <input type="url" name="app_url" id="appUrl">
+                </div>
+                <div class="form-group">
+                  <label>زبان پیش‌فرض</label>
+                  <select name="language" id="settingsLanguage">
+                    <option value="fa">فارسی</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>تم</label>
+                  <select name="theme" id="settingsTheme">
+                    <option value="dark">تاریک</option>
+                    <option value="light">روشن</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary">ذخیره</button>
+              </form>
+            </div>
+            
+            <div class="settings-card">
+              <h3>تغییر رمز عبور</h3>
+              <form id="passwordForm">
+                <div class="form-group">
+                  <label>رمز فعلی</label>
+                  <input type="password" name="current_password" required>
+                </div>
+                <div class="form-group">
+                  <label>رمز جدید</label>
+                  <input type="password" name="new_password" required>
+                </div>
+                <div class="form-group">
+                  <label>تکرار رمز جدید</label>
+                  <input type="password" name="confirm_password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">تغییر رمز</button>
+              </form>
+            </div>
+            
+            <div class="settings-card">
+              <h3>تنظیمات پیش‌فرض</h3>
+              <form id="defaultSettingsForm">
+                <div class="form-group">
+                  <label>ترافیک پیش‌فرض (GB)</label>
+                  <input type="number" name="default_traffic" id="defaultTraffic">
+                </div>
+                <div class="form-group">
+                  <label>مدت اعتبار پیش‌فرض (روز)</label>
+                  <input type="number" name="default_days" id="defaultDays">
+                </div>
+                <button type="submit" class="btn btn-primary">ذخیره</button>
+              </form>
+            </div>
+            
+            <div class="settings-card">
+              <h3>اطلاعات سیستم</h3>
+              <div class="system-info" id="systemInfo">
+                <div class="info-row">
+                  <span>نسخه</span>
+                  <span>1.0.0</span>
+                </div>
+                <div class="info-row">
+                  <span>پلتفرم</span>
+                  <span>Cloudflare Workers</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Backup Page -->
+        <div class="page" id="backupPage">
+          <h2 class="page-title">پشتیبان‌گیری</h2>
+          
+          <div class="backup-actions">
+            <button class="btn btn-primary" id="createBackupBtn">
+              <span>💾</span> ایجاد پشتیبان
+            </button>
+            <button class="btn btn-secondary" id="restoreBackupBtn">
+              <span>🔄</span> بازگردانی
+            </button>
+          </div>
+          
+          <div class="table-container">
+            <table class="data-table" id="backupsTable">
+              <thead>
+                <tr>
+                  <th>نام فایل</th>
+                  <th>تاریخ ایجاد</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="backupsTableBody">
+                <tr><td colspan="3" class="loading">در حال بارگذاری...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Modals -->
+  <div class="modal" id="userModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="userModalTitle">کاربر جدید</h3>
+        <button class="modal-close" onclick="closeModal('userModal')">&times;</button>
+      </div>
+      <form id="userForm" class="modal-body">
+        <input type="hidden" id="userUuid">
+        <div class="form-group">
+          <label>نام کاربری *</label>
+          <input type="text" id="newUsername" required>
+        </div>
+        <div class="form-group">
+          <label>توضیحات</label>
+          <input type="text" id="newRemark">
+        </div>
+        <div class="form-group">
+          <label>پروتکل</label>
+          <select id="newProtocol">
+            <option value="vless">VLESS</option>
+            <option value="vmess">VMess</option>
+            <option value="trojan">Trojan</option>
+            <option value="shadowsocks">Shadowsocks</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>مدت اعتبار (روز)</label>
+            <input type="number" id="newExpireDays" value="30">
+          </div>
+          <div class="form-group">
+            <label>ترافیک (GB)</label>
+            <input type="number" id="newTrafficGb" value="100">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>وضعیت</label>
+          <label class="toggle">
+            <input type="checkbox" id="newEnable" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('userModal')">انصراف</button>
+          <button type="submit" class="btn btn-primary">ذخیره</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div class="modal" id="nodeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="nodeModalTitle">نود جدید</h3>
+        <button class="modal-close" onclick="closeModal('nodeModal')">&times;</button>
+      </div>
+      <form id="nodeForm" class="modal-body">
+        <input type="hidden" id="nodeId">
+        <div class="form-group">
+          <label>نام *</label>
+          <input type="text" id="nodeName" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>آدرس *</label>
+            <input type="text" id="nodeAddress" required>
+          </div>
+          <div class="form-group">
+            <label>پورت *</label>
+            <input type="number" id="nodePort" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>پروتکل</label>
+            <select id="nodeType">
+              <option value="vless">VLESS</option>
+              <option value="vmess">VMess</option>
+              <option value="trojan">Trojan</option>
+              <option value="shadowsocks">Shadowsocks</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>TLS</label>
+            <label class="toggle">
+              <input type="checkbox" id="nodeTls" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>توضیحات</label>
+          <input type="text" id="nodeRemark">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('nodeModal')">انصراف</button>
+          <button type="submit" class="btn btn-primary">ذخیره</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div class="modal" id="confirmModal">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3>تأیید</h3>
+        <button class="modal-close" onclick="closeModal('confirmModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">آیا مطمئن هستید؟</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('confirmModal')">انصراف</button>
+          <button type="button" class="btn btn-danger" id="confirmBtn">تأیید</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+  
+  <script src="/js/app.js"></script>
+</body>
+</html>

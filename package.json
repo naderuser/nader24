@@ -1,0 +1,28 @@
+{
+  "name": "nadervpn",
+  "version": "1.0.0",
+  "description": "Advanced VPN Management Panel for Cloudflare Workers",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:migrate": "wrangler d1 execute nadervpn-db --file=./schema.sql",
+    "d1:local": "wrangler d1 execute nadervpn-db --local --file=./schema.sql"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "vpn",
+    "v2ray",
+    "vless",
+    "vmess",
+    "trojan",
+    "shadowsocks",
+    "wireguard"
+  ],
+  "author": "NaderVPN",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
