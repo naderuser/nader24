@@ -1,8 +1,11 @@
 /**
  * NaderVPN Subscription Manager
- * Cloudflare Workers - Single File Version
+ * Cloudflare Workers - Single File Version with D1 & KV
  * 
- * Just deploy this file directly to Cloudflare Workers!
+ * Features:
+ * - D1 for persistent storage
+ * - KV for sessions cache
+ * - Full CRUD operations
  */
 
 export default {
@@ -25,15 +28,6 @@ export default {
 
     // Admin password (from env or default)
     const ADMIN_PASSWORD = env.ADMIN_PASSWORD || 'nader0933';
-    const SUBSCRIPTIONS = env.SUBSCRIPTIONS || '[]';
-
-    // Parse subscriptions from env
-    let subscriptions = [];
-    try {
-      subscriptions = JSON.parse(SUBSCRIPTIONS);
-    } catch (e) {
-      subscriptions = [];
-    }
 
     // Helper functions
     const jsonResponse = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -57,7 +51,7 @@ export default {
 
     // Auth check
     const cookies = parseCookies(request);
-    const isLoggedIn = cookies['nader_logged_in'] === 'true' && cookies['nader_admin'] === await hashString(ADMIN_PASSWORD);
+    const isLoggedIn = cookies['nader_session'] === 'admin';
 
     // Routes
     try {
@@ -71,10 +65,8 @@ export default {
       if (path === '/api/login' && method === 'POST') {
         const body = await request.json();
         if (body.password === ADMIN_PASSWORD) {
-          const hash = await hashString(ADMIN_PASSWORD);
           const response = jsonResponse({ success: true, message: 'ورود موفق' });
-          setCookie(response, 'nader_logged_in', 'true');
-          setCookie(response, 'nader_admin', hash);
+          setCookie(response, 'nader_session', 'admin');
           return response;
         }
         return jsonResponse({ success: false, message: 'رمز عبور اشتباه' }, 401);
@@ -83,8 +75,7 @@ export default {
       // Logout
       if (path === '/api/logout' && method === 'POST') {
         const response = jsonResponse({ success: true });
-        setCookie(response, 'nader_logged_in', '', 0);
-        setCookie(response, 'nader_admin', '', 0);
+        setCookie(response, 'nader_session', '', 0);
         return response;
       }
 
@@ -92,7 +83,10 @@ export default {
       const subMatch = path.match(/^\/sub\/([a-zA-Z0-9]+)\/?$/);
       if (subMatch && method === 'GET') {
         const token = subMatch[1];
-        const sub = subscriptions.find(s => s.token === token);
+        
+        // Get from D1
+        const sub = await env.DB.prepare('SELECT * FROM subscriptions WHERE subscription_token = ?').bind(token).first();
+        
         if (!sub) return new Response('Subscription not found', { status: 404 });
         if (!sub.enable) return new Response('Subscription disabled', { status: 403 });
         
@@ -101,7 +95,7 @@ export default {
           return new Response('Subscription expired', { status: 403 });
         }
 
-        return new Response(sub.configs.join('\n'), {
+        return new Response(sub.config_links, {
           headers: { 'Content-Type': 'text/plain; charset=utf-8' }
         });
       }
@@ -124,38 +118,81 @@ export default {
       // API: Stats
       if (path === '/api/stats' && method === 'GET') {
         const now = Math.floor(Date.now() / 1000);
-        const stats = {
-          total: subscriptions.length,
-          active: subscriptions.filter(s => s.enable && (s.expire_at === 0 || s.expire_at > now)).length,
-          expired: subscriptions.filter(s => s.expire_at > 0 && s.expire_at < now).length,
-          disabled: subscriptions.filter(s => !s.enable).length
-        };
-        return jsonResponse({ success: true, data: stats });
+        
+        const total = await env.DB.prepare('SELECT COUNT(*) as c FROM subscriptions').first();
+        const active = await env.DB.prepare('SELECT COUNT(*) as c FROM subscriptions WHERE enable = 1 AND (expire_at = 0 OR expire_at > ?)').bind(now).first();
+        const expired = await env.DB.prepare('SELECT COUNT(*) as c FROM subscriptions WHERE expire_at > 0 AND expire_at < ?').bind(now).first();
+        const disabled = await env.DB.prepare('SELECT COUNT(*) as c FROM subscriptions WHERE enable = 0').first();
+        
+        return jsonResponse({ 
+          success: true, 
+          data: {
+            total: total?.c || 0,
+            active: active?.c || 0,
+            expired: expired?.c || 0,
+            disabled: disabled?.c || 0
+          }
+        });
       }
 
       // API: List subscriptions
       if (path === '/api/subscriptions' && method === 'GET') {
         const search = url.searchParams.get('search') || '';
         const status = url.searchParams.get('status') || '';
-        let filtered = subscriptions;
-
+        const page = parseInt(url.searchParams.get('page')) || 1;
+        const limit = 20;
+        const offset = (page - 1) * limit;
+        
+        let query = 'SELECT * FROM subscriptions WHERE 1=1';
+        const params = [];
+        
         if (search) {
-          filtered = filtered.filter(s => 
-            s.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-            s.remark?.toLowerCase().includes(search.toLowerCase())
-          );
+          query += ' AND (customer_name LIKE ? OR remark LIKE ?)';
+          params.push(`%${search}%`, `%${search}%`);
         }
-
+        
         const now = Math.floor(Date.now() / 1000);
         if (status === 'active') {
-          filtered = filtered.filter(s => s.enable && (s.expire_at === 0 || s.expire_at > now));
+          query += ' AND enable = 1 AND (expire_at = 0 OR expire_at > ?)';
+          params.push(now);
         } else if (status === 'expired') {
-          filtered = filtered.filter(s => s.expire_at > 0 && s.expire_at < now);
+          query += ' AND expire_at > 0 AND expire_at < ?';
+          params.push(now);
         } else if (status === 'disabled') {
-          filtered = filtered.filter(s => !s.enable);
+          query += ' AND enable = 0';
         }
-
-        return jsonResponse({ success: true, data: filtered });
+        
+        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+        
+        const subs = await env.DB.prepare(query).bind(...params).all();
+        
+        // Get total count
+        let countQuery = 'SELECT COUNT(*) as c FROM subscriptions WHERE 1=1';
+        const countParams = [];
+        if (search) {
+          countQuery += ' AND (customer_name LIKE ? OR remark LIKE ?)';
+          countParams.push(`%${search}%`, `%${search}%`);
+        }
+        if (status === 'active') {
+          countQuery += ' AND enable = 1 AND (expire_at = 0 OR expire_at > ?)';
+          countParams.push(now);
+        } else if (status === 'expired') {
+          countQuery += ' AND expire_at > 0 AND expire_at < ?';
+          countParams.push(now);
+        } else if (status === 'disabled') {
+          countQuery += ' AND enable = 0';
+        }
+        
+        const total = await env.DB.prepare(countQuery).bind(...countParams).first();
+        
+        return jsonResponse({ 
+          success: true, 
+          data: subs.results.map(s => formatSubscription(s, url.origin)),
+          total: total?.c || 0,
+          page,
+          pages: Math.ceil((total?.c || 0) / limit)
+        });
       }
 
       // API: Add subscription
@@ -183,27 +220,26 @@ export default {
 
         const token = generateToken(16);
         const expire_at = expire_days > 0 ? Math.floor(Date.now() / 1000) + (expire_days * 86400) : 0;
+        const now = Math.floor(Date.now() / 1000);
 
-        const newSub = {
-          id: crypto.randomUUID(),
-          token,
-          customer_name,
-          remark: remark || '',
-          configs,
-          traffic_limit: traffic_limit || 0,
-          expire_at,
-          enable: true,
-          created_at: Math.floor(Date.now() / 1000)
-        };
-
-        subscriptions.push(newSub);
-        await saveSubscriptions(env, subscriptions);
+        const result = await env.DB.prepare(`
+          INSERT INTO subscriptions (uuid, customer_name, remark, config_links, traffic_limit, expire_at, subscription_token, enable, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+        `).bind(crypto.randomUUID(), customer_name, remark || '', configs.join('\n'), traffic_limit || 0, expire_at, token, now).run();
 
         return jsonResponse({
           success: true,
           message: 'اشتراک ایجاد شد',
           data: {
-            ...newSub,
+            id: result.meta.last_row_id,
+            uuid: token,
+            token,
+            customer_name,
+            remark: remark || '',
+            configs,
+            traffic_limit: traffic_limit || 0,
+            expire_at,
+            enable: true,
             subscription_url: `${url.origin}/sub/${token}`
           }
         }, 201);
@@ -214,16 +250,26 @@ export default {
       if (updateMatch && method === 'PUT') {
         const id = updateMatch[1];
         const body = await request.json();
-        const index = subscriptions.findIndex(s => s.id === id || s.token === id);
-
-        if (index === -1) {
+        
+        // Find subscription
+        const existing = await env.DB.prepare('SELECT * FROM subscriptions WHERE uuid = ? OR subscription_token = ?').bind(id, id).first();
+        if (!existing) {
           return jsonResponse({ success: false, error: 'اشتراک یافت نشد' }, 404);
         }
 
-        if (body.customer_name) subscriptions[index].customer_name = body.customer_name;
-        if (body.remark !== undefined) subscriptions[index].remark = body.remark;
+        const updates = [];
+        const values = [];
+        
+        if (body.customer_name) {
+          updates.push('customer_name = ?');
+          values.push(body.customer_name);
+        }
+        if (body.remark !== undefined) {
+          updates.push('remark = ?');
+          values.push(body.remark);
+        }
         if (body.config_links) {
-          subscriptions[index].configs = body.config_links.split('\n').filter(l => 
+          const configs = body.config_links.split('\n').filter(l => 
             l.trim() && (
               l.startsWith('vless://') || l.startsWith('vmess://') || 
               l.startsWith('trojan://') || l.startsWith('ss://') ||
@@ -231,30 +277,43 @@ export default {
               l.startsWith('wireguard://')
             )
           );
+          updates.push('config_links = ?');
+          values.push(configs.join('\n'));
         }
-        if (body.traffic_limit !== undefined) subscriptions[index].traffic_limit = body.traffic_limit;
+        if (body.traffic_limit !== undefined) {
+          updates.push('traffic_limit = ?');
+          values.push(body.traffic_limit);
+        }
         if (body.expire_days !== undefined) {
-          subscriptions[index].expire_at = body.expire_days > 0 
-            ? Math.floor(Date.now() / 1000) + (body.expire_days * 86400) 
-            : 0;
+          updates.push('expire_at = ?');
+          values.push(body.expire_days > 0 ? Math.floor(Date.now() / 1000) + (body.expire_days * 86400) : 0);
         }
-        if (body.enable !== undefined) subscriptions[index].enable = body.enable;
-
-        await saveSubscriptions(env, subscriptions);
+        if (body.enable !== undefined) {
+          updates.push('enable = ?');
+          values.push(body.enable ? 1 : 0);
+        }
+        
+        if (updates.length > 0) {
+          updates.push('updated_at = ?');
+          values.push(Math.floor(Date.now() / 1000));
+          values.push(existing.id);
+          
+          await env.DB.prepare(`UPDATE subscriptions SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+        }
+        
         return jsonResponse({ success: true, message: 'با موفقیت بروزرسانی شد' });
       }
 
       // API: Delete subscription
       if (updateMatch && method === 'DELETE') {
         const id = updateMatch[1];
-        const index = subscriptions.findIndex(s => s.id === id || s.token === id);
-
-        if (index === -1) {
+        
+        const existing = await env.DB.prepare('SELECT id FROM subscriptions WHERE uuid = ? OR subscription_token = ?').bind(id, id).first();
+        if (!existing) {
           return jsonResponse({ success: false, error: 'اشتراک یافت نشد' }, 404);
         }
 
-        subscriptions.splice(index, 1);
-        await saveSubscriptions(env, subscriptions);
+        await env.DB.prepare('DELETE FROM subscriptions WHERE id = ?').bind(existing.id).run();
         return jsonResponse({ success: true, message: 'با موفقیت حذف شد' });
       }
 
@@ -263,42 +322,42 @@ export default {
       if (toggleMatch && method === 'POST') {
         const id = toggleMatch[1];
         const action = toggleMatch[2];
-        const index = subscriptions.findIndex(s => s.id === id || s.token === id);
-
-        if (index === -1) {
+        
+        const existing = await env.DB.prepare('SELECT id FROM subscriptions WHERE uuid = ? OR subscription_token = ?').bind(id, id).first();
+        if (!existing) {
           return jsonResponse({ success: false, error: 'اشتراک یافت نشد' }, 404);
         }
 
-        subscriptions[index].enable = action === 'enable';
-        await saveSubscriptions(env, subscriptions);
+        await env.DB.prepare('UPDATE subscriptions SET enable = ?, updated_at = ? WHERE id = ?')
+          .bind(action === 'enable' ? 1 : 0, Math.floor(Date.now() / 1000), existing.id).run();
+        
         return jsonResponse({ success: true, message: `اشتراک ${action === 'enable' ? 'فعال' : 'غیرفعال'} شد` });
       }
 
       // API: Duplicate subscription
       if (path.match(/^\/api\/subscriptions\/([a-zA-Z0-9-]+)\/duplicate\/?$/) && method === 'POST') {
         const id = path.split('/')[3];
-        const sub = subscriptions.find(s => s.id === id || s.token === id);
-
-        if (!sub) {
+        
+        const existing = await env.DB.prepare('SELECT * FROM subscriptions WHERE uuid = ? OR subscription_token = ? OR id = ?').bind(id, id, id).first();
+        if (!existing) {
           return jsonResponse({ success: false, error: 'اشتراک یافت نشد' }, 404);
         }
 
         const newToken = generateToken(16);
-        const newSub = {
-          ...sub,
-          id: crypto.randomUUID(),
-          token: newToken,
-          customer_name: sub.customer_name + ' (کپی)',
-          created_at: Math.floor(Date.now() / 1000)
-        };
+        const now = Math.floor(Date.now() / 1000);
 
-        subscriptions.push(newSub);
-        await saveSubscriptions(env, subscriptions);
+        const result = await env.DB.prepare(`
+          INSERT INTO subscriptions (uuid, customer_name, remark, config_links, traffic_limit, expire_at, subscription_token, enable, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(crypto.randomUUID(), existing.customer_name + ' (کپی)', existing.remark, existing.config_links, existing.traffic_limit, existing.expire_at, newToken, existing.enable, now).run();
 
         return jsonResponse({
           success: true,
           message: 'اشتراک کپی شد',
-          data: { ...newSub, subscription_url: `${url.origin}/sub/${newToken}` }
+          data: {
+            token: newToken,
+            subscription_url: `${url.origin}/sub/${newToken}`
+          }
         }, 201);
       }
 
@@ -311,8 +370,12 @@ export default {
           return jsonResponse({ success: false, error: 'رمز فعلی اشتباه است' }, 401);
         }
 
-        // Note: In production, you'd save this to env
-        return jsonResponse({ success: true, message: 'رمز تغییر کرد (در این نسخه فقط در حافظه)' });
+        // Save new password to KV
+        if (env.KV) {
+          await env.KV.put('admin_password', new_password);
+        }
+        
+        return jsonResponse({ success: true, message: 'رمز تغییر کرد' });
       }
 
       return new Response('Not Found', { status: 404 });
@@ -325,13 +388,6 @@ export default {
 };
 
 // Helper functions
-async function hashString(str) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
-}
-
 function generateToken(length = 16) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const array = new Uint8Array(length);
@@ -339,11 +395,32 @@ function generateToken(length = 16) {
   return Array.from(array).map(b => chars[b % chars.length]).join('');
 }
 
-async function saveSubscriptions(env, subscriptions) {
-  // Save to KV if available, otherwise just keep in memory
-  if (env.KV) {
-    await env.KV.put('subscriptions', JSON.stringify(subscriptions));
+function formatSubscription(s, baseUrl) {
+  const now = Math.floor(Date.now() / 1000);
+  let status = 'disabled';
+  if (s.enable) {
+    if (s.expire_at === 0 || s.expire_at > now) {
+      status = 'active';
+    } else {
+      status = 'expired';
+    }
   }
+  
+  return {
+    id: s.id,
+    uuid: s.uuid,
+    token: s.subscription_token,
+    customer_name: s.customer_name,
+    remark: s.remark,
+    configs: s.config_links.split('\n').filter(l => l.trim()),
+    traffic_limit: s.traffic_limit,
+    expire_at: s.expire_at,
+    expire_date: s.expire_at > 0 ? new Date(s.expire_at * 1000).toLocaleDateString('fa-IR') : 'نامحدود',
+    enable: s.enable === 1,
+    status,
+    subscription_url: `${baseUrl}/sub/${s.subscription_token}`,
+    created_at: s.created_at
+  };
 }
 
 // HTML Pages
